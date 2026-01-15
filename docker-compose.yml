@@ -1,0 +1,284 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:18-alpine
+    container_name: toyana-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      PGDATA: /var/lib/postgresql/pgdata
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./infrastructure/postgres/init-scripts:/docker-entrypoint-initdb.d
+      - /Users/greedsmole/code/wdm-volumes/postgres:/var/lib/postgresql/pgdata
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - toyana-network
+
+  rabbitmq:
+    image: rabbitmq:4-management-alpine
+    container_name: toyana-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - /Users/greedsmole/code/wdm-volumes/rabbitmq:/var/lib/rabbitmq
+    healthcheck:
+      test: [ "CMD", "rabbitmq-diagnostics", "-q", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - toyana-network
+
+  valkey:
+    image: valkey/valkey:8
+    container_name: toyana-valkey
+    command: valkey-server --save 60 1 --dir /data --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - /Users/greedsmole/code/wdm-volumes/valkey:/data
+    networks:
+      - toyana-network
+
+  identity-api:
+    build:
+      context: .
+      dockerfile: src/Toyana.Identity/Dockerfile
+    container_name: toyana-identity
+    environment:
+      - ConnectionStrings__Postgres=Host=postgres;Port=5432;Database=toyana_identity;Username=postgres;Password=postgres
+      - ConnectionStrings__Valkey=valkey:6379
+      - ConnectionStrings__RabbitMq=amqp://guest:guest@rabbitmq:5672
+      - Jwt__Issuer=Toyana
+      - Jwt__Audience=Toyana
+      - Jwt__Key=ThisIsASecretKeyForToyanaProjectAndItMustBeLongEnough
+    ports:
+      - "5001:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      valkey:
+        condition: service_started
+    networks:
+      - toyana-network
+
+  ordering-api:
+    build:
+      context: .
+      dockerfile: src/Toyana.Ordering/Dockerfile
+    container_name: toyana-ordering
+    environment:
+      - ConnectionStrings__Postgres=Host=postgres;Port=5432;Database=toyana_ordering;Username=postgres;Password=postgres
+      - ConnectionStrings__RabbitMq=amqp://guest:guest@rabbitmq:5672
+    ports:
+      - "5100:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - toyana-network
+
+  gateway:
+    build:
+      context: .
+      dockerfile: src/Toyana.Gateway/Dockerfile
+    container_name: toyana-gateway
+    environment:
+      - Jwt__Issuer=Toyana
+      - Jwt__Audience=Toyana
+      - Jwt__Key=ThisIsASecretKeyForToyanaProjectAndItMustBeLongEnough
+    ports:
+      - "8080:8080"
+    depends_on:
+      - identity-api
+      - ordering-api
+      - vendor-api
+      - catalog-api
+    networks:
+      - toyana-network
+
+  vendor-api:
+    build:
+      context: .
+      dockerfile: src/Toyana.VendorCenter/Dockerfile
+    container_name: toyana-vendor
+    environment:
+      - ConnectionStrings__Postgres=Host=postgres;Port=5432;Database=toyana_vendor;Username=postgres;Password=postgres
+      - ConnectionStrings__RabbitMq=amqp://guest:guest@rabbitmq:5672
+    ports:
+      - "5002:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - toyana-network
+
+  catalog-api:
+    build:
+      context: .
+      dockerfile: src/Toyana.Catalog/Dockerfile
+    container_name: toyana-catalog
+    environment:
+      - ConnectionStrings__Postgres=Host=postgres;Port=5432;Database=toyana_catalog;Username=postgres;Password=postgres
+      - ConnectionStrings__RabbitMq=amqp://guest:guest@rabbitmq:5672
+    ports:
+      - "5003:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - toyana-network
+
+  chat-api:
+    build:
+      context: .
+      dockerfile: src/Toyana.Chat/Dockerfile
+    container_name: toyana-chat
+    environment:
+      - ConnectionStrings__Valkey=valkey:6379
+    ports:
+      - "5004:8080"
+    depends_on:
+      - valkey
+    networks:
+      - toyana-network
+
+  payments-api:
+    build:
+      context: .
+      dockerfile: src/Toyana.Payments/Dockerfile
+    container_name: toyana-payments
+    environment:
+      - ConnectionStrings__Postgres=Host=postgres;Port=5432;Database=toyana_payments;Username=postgres;Password=postgres
+      - ConnectionStrings__RabbitMq=amqp://guest:guest@rabbitmq:5672
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - toyana-network
+
+  alerts-api:
+    image: toyana-alerts-api
+    build:
+      context: .
+      dockerfile: src/Toyana.Alerts/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - Telegram:BotToken=${TELEGRAM_BOT_TOKEN}
+      - Telegram:ChatId=${TELEGRAM_CHAT_ID}
+    ports:
+      - "5200:8080"
+    depends_on:
+      - otel-collector
+    networks:
+      - toyana-network
+
+  admin-api:
+    build:
+      context: .
+      dockerfile: src/Toyana.Admin/Dockerfile
+    container_name: toyana-admin
+    environment:
+      - ConnectionStrings__IdentityConnection=Host=postgres;Port=5432;Database=toyana_identity;Username=postgres;Password=postgres
+      - ConnectionStrings__VendorConnection=Host=postgres;Port=5432;Database=toyana_vendor;Username=postgres;Password=postgres
+      - ConnectionStrings__OrderingConnection=Host=postgres;Port=5432;Database=toyana_ordering;Username=postgres;Password=postgres
+      - ConnectionStrings__Valkey=valkey:6379
+      - ConnectionStrings__RabbitMq=amqp://guest:guest@rabbitmq:5672
+      - Jwt__Issuer=Toyana
+      - Jwt__Audience=Toyana
+      - Jwt__Key=ThisIsASecretKeyForToyanaProjectAndItMustBeLongEnough
+    ports:
+      - "5005:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      valkey:
+        condition: service_started
+    networks:
+      - toyana-network
+
+  # --- Observability Stack ---
+  loki:
+    image: grafana/loki:latest
+    container_name: toyana-loki
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - ./infrastructure/observability/loki-config.yaml:/etc/loki/local-config.yaml
+      - /Users/greedsmole/code/wdm-volumes/loki:/tmp/loki
+    networks:
+      - toyana-network
+
+  tempo:
+    image: grafana/tempo:latest
+    container_name: toyana-tempo
+    command: [ "-config.file=/etc/tempo.yaml" ]
+    volumes:
+      - ./infrastructure/observability/tempo-config.yaml:/etc/tempo.yaml
+      - /Users/greedsmole/code/wdm-volumes/tempo:/tmp/tempo
+    ports:
+      - "3200:3200" # Tempo HTTP
+    networks:
+      - toyana-network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: toyana-grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./infrastructure/observability/grafana-datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
+      - /Users/greedsmole/code/wdm-volumes/grafana:/var/lib/grafana
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_AUTH_DISABLE_LOGIN_FORM=true
+    depends_on:
+      - loki
+      - tempo
+    networks:
+      - toyana-network
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    container_name: toyana-otel-collector
+    command: [ "--config=/etc/otel-collector-config.yaml" ]
+    volumes:
+      - ./infrastructure/observability/otel-collector-config.yaml:/etc/otel-collector-config.yaml
+      - /Users/greedsmole/code/wdm-volumes/otel-collector:/var/lib/otelcol
+    ports:
+      - "8888:8888" # Prometheus metrics exposed by the collector
+      - "8889:8889" # Prometheus exporter metrics
+      - "13133:13133" # health_check extension
+      - "4317:4317" # OTLP gRPC receiver
+    depends_on:
+      - loki
+      - tempo
+    networks:
+      - toyana-network
+
+networks:
+  toyana-network:
+    driver: bridge

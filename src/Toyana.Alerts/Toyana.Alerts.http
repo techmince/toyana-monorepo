@@ -1,0 +1,6 @@
+@Toyana.Alerts_HostAddress = http://localhost:5277
+
+GET {{Toyana.Alerts_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

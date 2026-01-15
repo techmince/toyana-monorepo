@@ -1,0 +1,35 @@
+apiVersion: 1
+
+datasources:
+  - name: Loki
+    type: loki
+    access: proxy
+    url: http://loki:3100
+    jsonData:
+      derivedFields:
+        - datasourceUid: tempo
+          matcherRegex: "TraceId=(\\w+)"
+          name: TraceID
+          url: "$${__value.raw}"
+
+  - name: Tempo
+    type: tempo
+    access: proxy
+    orgId: 1
+    url: http://tempo:3200
+    basicAuth: false
+    isDefault: true
+    jsonData:
+      nodeGraph:
+        enabled: true
+      search:
+        hide: false
+      lokiSearch:
+        datasourceUid: loki
+      tracesToLogsV2:
+        datasourceUid: loki
+        spanStartTimeShift: '1h'
+        spanEndTimeShift: '1h'
+        tags: ['job', 'instance', 'pod', 'namespace']
+        filterByTraceID: true
+        filterBySpanID: true

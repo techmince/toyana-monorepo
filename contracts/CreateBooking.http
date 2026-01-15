@@ -1,0 +1,19 @@
+@host = http://localhost:5000
+
+### Create Booking Request
+# Use this to initiate a new booking process handled by Toyana.Ordering (Wolverine Saga)
+
+POST {{host}}/bookings
+Content-Type: application/json
+
+{
+    "bookingId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "vendorId": "9fa85f64-5717-4562-b3fc-2c963f66afa7",
+    "userId": "1fa85f64-5717-4562-b3fc-2c963f66afa8",
+    "eventDate": "2023-11-15T10:00:00Z",
+    "amount": 1500000.00
+}
+
+### Expected Response
+# HTTP 202 Accepted
+# Location: /bookings/3fa85f64-5717-4562-b3fc-2c963f66afa6

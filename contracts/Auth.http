@@ -1,0 +1,29 @@
+@host = http://localhost:5001
+
+### Register User
+POST {{host}}/auth/register
+Content-Type: application/json
+
+{
+    "username": "testuser",
+    "phoneNumber": "+998901234567",
+    "password": "StrongPassword123!"
+}
+
+### Login (Success)
+POST {{host}}/auth/login
+Content-Type: application/json
+
+{
+    "login": "testuser",
+    "password": "StrongPassword123!"
+}
+
+### Login (Phone)
+POST {{host}}/auth/login
+Content-Type: application/json
+
+{
+    "login": "+998901234567",
+    "password": "StrongPassword123!"
+}

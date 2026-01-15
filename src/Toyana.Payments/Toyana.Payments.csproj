@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>dotnet-Toyana.Payments-0d9fca7d-dff2-423c-8101-c3e7e5248990</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Marten" Version="8.17.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis" Version="5.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.2" />
+    <PackageReference Include="WolverineFx" Version="5.10.0" />
+    <PackageReference Include="WolverineFx.Marten" Version="5.10.0" />
+    <PackageReference Include="WolverineFx.RabbitMQ" Version="5.10.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\shared\Toyana.Contracts\Toyana.Contracts.csproj" />
+    <ProjectReference Include="..\..\shared\Toyana.Shared\Toyana.Shared.csproj" />
+  </ItemGroup>
+</Project>

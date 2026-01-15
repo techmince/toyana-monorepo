@@ -1,0 +1,44 @@
+@gatewayUrl = http://localhost:8080
+@token = <PLACE_YOUR_JWT_HERE>
+
+### 1. Create Vendor (Requires Auth)
+POST {{gatewayUrl}}/vendors
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "businessName": "Best Weddings Co",
+  "taxId": "123456789",
+  "category": "Videography"
+}
+
+### 2. Add Service
+POST {{gatewayUrl}}/vendors/services
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "vendorId": "REPLACE_WITH_VENDOR_UUID",
+  "name": "Full Day 4K",
+  "description": "8 hours coverage",
+  "price": 1000.00
+}
+
+### 3. Set Availability
+POST {{gatewayUrl}}/vendors/availability
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "vendorId": "REPLACE_WITH_VENDOR_UUID",
+  "date": "2023-11-15",
+  "status": "Blocked"
+}
+
+### 4. Search Catalog (Public)
+# Should return vendor if date is NOT blocked
+GET {{gatewayUrl}}/catalog/search?category=Videography&date=2023-11-15
+
+### 5. Search Catalog (Blocked Date)
+# Should NOT return vendor
+GET {{gatewayUrl}}/catalog/search?category=Videography&date=2023-11-15

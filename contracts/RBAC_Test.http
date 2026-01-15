@@ -1,0 +1,84 @@
+@gatewayUrl = http://localhost:8080
+@identityUrl = http://localhost:8080/auth
+@vendorOwnerToken = <PLACE_OWNER_TOKEN>
+@subUserToken = <PLACE_SUBUSER_TOKEN>
+
+### 1. Register Client
+POST {{identityUrl}}/client/register
+Content-Type: application/json
+
+{
+  "username": "client_alice",
+  "phoneNumber": "555-0100",
+  "password": "Password123!"
+}
+
+### 2. Login Client
+# Expected: 200 OK, Role=Customer
+POST {{identityUrl}}/client/login
+Content-Type: application/json
+
+{
+  "login": "client_alice",
+  "password": "Password123!"
+}
+
+### 3. Register Vendor Owner (Main User)
+# Expected: 200 OK, Role=Vendor, IsOwner=True
+POST {{identityUrl}}/vendor/register
+Content-Type: application/json
+
+{
+  "username": "vendor_bob",
+  "password": "Password123!",
+  "businessName": "Bob's Burgers",
+  "taxId": "TAX-999",
+  "category": "Catering"
+}
+
+### 4. Create Sub-User (As Owner)
+# Expected: 200 OK.
+# Requires Owner Token (from step 3 login/register)
+POST {{identityUrl}}/vendor/users
+Content-Type: application/json
+Authorization: Bearer {{vendorOwnerToken}}
+
+{
+  "username": "staff_charlie",
+  "password": "Password123!",
+  "roles": [],
+  "extraPermissions": ["VENDOR_MANAGE_AVAILABILITY"]
+}
+
+### 5. Login Sub-User
+# Expected: 200 OK, Role=Vendor, Permissions=["VENDOR_MANAGE_AVAILABILITY"]
+POST {{identityUrl}}/vendor/login
+Content-Type: application/json
+
+{
+  "login": "staff_charlie",
+  "password": "Password123!"
+}
+
+### 6. Verify Permission - Add Service (Should Fail)
+# Charlie does NOT have MANAGE_SERVICES
+POST {{gatewayUrl}}/vendors/services
+Content-Type: application/json
+Authorization: Bearer {{subUserToken}}
+
+{
+  "name": "Fries",
+  "description": "Crispy",
+  "price": 5.00
+}
+
+### 7. Verify Permission - Set Availability (Should Succeed)
+# Charlie HAS MANAGE_AVAILABILITY
+POST {{gatewayUrl}}/vendors/availability
+Content-Type: application/json
+Authorization: Bearer {{subUserToken}}
+
+{
+  "date": "2023-12-25",
+  "status": "Blocked"
+}
