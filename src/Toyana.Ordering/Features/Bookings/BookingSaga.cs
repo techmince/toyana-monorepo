@@ -1,5 +1,5 @@
-using Wolverine;
 using Toyana.Contracts;
+using Wolverine;
 
 namespace Toyana.Ordering.Features.Bookings;
 

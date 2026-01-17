@@ -1,17 +1,18 @@
-FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine AS base
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
 WORKDIR /app
 EXPOSE 8080
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false
-RUN apk add --no-cache icu-libs krb5-libs
 
-FROM mcr.microsoft.com/dotnet/sdk:10.0-alpine AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
+
 COPY ["src/Toyana.Identity/Toyana.Identity.csproj", "src/Toyana.Identity/"]
 COPY ["shared/Toyana.Contracts/Toyana.Contracts.csproj", "shared/Toyana.Contracts/"]
 COPY ["shared/Toyana.Shared/Toyana.Shared.csproj", "shared/Toyana.Shared/"]
 RUN dotnet restore "src/Toyana.Identity/Toyana.Identity.csproj"
 COPY . .
 WORKDIR "/src/src/Toyana.Identity"
+
 RUN dotnet build "Toyana.Identity.csproj" -c Release -o /app/build
 
 FROM build AS publish

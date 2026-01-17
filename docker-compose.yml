@@ -218,6 +218,42 @@ services:
     networks:
       - toyana-network
 
+  client-web:
+    build:
+      context: ./apps/client-web
+      dockerfile: Dockerfile
+    container_name: toyana-client-web
+    ports:
+      - "4000:3000"
+    depends_on:
+      - gateway
+    networks:
+      - toyana-network
+
+  admin-web:
+    build:
+      context: ./apps/admin-web
+      dockerfile: Dockerfile
+    container_name: toyana-admin-web
+    ports:
+      - "4001:3000"
+    depends_on:
+      - gateway
+    networks:
+      - toyana-network
+
+  vendor-web:
+    build:
+      context: ./apps/vendor-web
+      dockerfile: Dockerfile
+    container_name: toyana-vendor-web
+    ports:
+      - "4002:3000"
+    depends_on:
+      - gateway
+    networks:
+      - toyana-network
+
   # --- Observability Stack ---
   loki:
     image: grafana/loki:latest

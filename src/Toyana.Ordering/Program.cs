@@ -1,23 +1,25 @@
 using System.Text;
 using JasperFx;
+using Marten;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
-using Wolverine;
-using Wolverine.Marten;
-using Wolverine.RabbitMQ;
-using Marten;
 using Toyana.Ordering.Features.Bookings;
 using Toyana.Shared;
-using Toyana.Shared.Extensions; // Observability
+using Toyana.Shared.Extensions;
+using Wolverine;
+using Wolverine.Http;
+using Wolverine.Marten;
+using Wolverine.RabbitMQ; // Observability
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.AddToyanaOpenApi();
 
 // Observability
 builder.AddToyanaObservability("ordering-api");
+builder.AddToyanaJsonOptions();
 
 // Auth (JWT) - Shared Key/Issuer with other services
 var jwtKey = builder.Configuration["Jwt:Key"] ?? "ThisIsASecretKeyForToyanaProjectAndItMustBeLongEnough";
@@ -70,6 +72,9 @@ builder.Host.UseWolverine(opts =>
     opts.Discovery.IncludeAssembly(typeof(Booking).Assembly);
 });
 
+builder.Services.AddWolverineHttp();
+
+
 var app = builder.Build();
 
 app.UseToyanaObservability();
@@ -77,70 +82,19 @@ app.UseToyanaObservability();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+
 }
+
+app.UseToyanaOpenApi();
 
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapGet("/", () => "Toyana.Ordering Service");
 
-// Minimal API for Creating Booking
-app.MapPost("/ordering/bookings",
-    async (IMessageBus bus, Toyana.Contracts.RequestBooking command, System.Security.Claims.ClaimsPrincipal user) =>
-    {
-        // Ensure ClientId matches token
-        var userId = user.GetUserId();
-        if (userId.HasValue)
-        {
-            // Override ClientId in command to trust the token, not the body
-            command = command with { UserId = userId.Value };
-        }
-
-        await bus.PublishAsync(command);
-        return Results.Accepted($"/ordering/bookings/{command.BookingId}");
-    }).RequireAuthorization();
-
-// Vendor Kanban
-app.MapGet("/ordering/vendor-bookings", async (IQuerySession session, System.Security.Claims.ClaimsPrincipal user) =>
+// Wolverine HTTP Endpoints
+app.MapWolverineEndpoints(opts =>
 {
-    var vendorId = user.GetVendorId();
-    if (!vendorId.HasValue) return Results.Unauthorized();
-
-    var bookings = await session.Query<Booking>()
-        .Where(b => b.VendorId == vendorId.Value)
-        .ToListAsync();
-
-    return Results.Ok(bookings);
-}).RequireAuthorization();
-
-// Client History
-app.MapGet("/ordering/my-bookings", async (IQuerySession session, System.Security.Claims.ClaimsPrincipal user) =>
-{
-    var userId = user.GetUserId();
-    if (!userId.HasValue) return Results.Unauthorized();
-
-    var bookings = await session.Query<Booking>()
-        .Where(b => b.UserId == userId.Value)
-        .ToListAsync();
-
-    return Results.Ok(bookings);
-}).RequireAuthorization();
-
-// Actions
-app.MapPost("/ordering/bookings/{id}/accept", async (IMessageBus bus, Guid id) =>
-{
-    // In real app, verify Vendor owns this booking
-    await bus.InvokeAsync(
-        new Toyana.Contracts.ApproveBooking(id, Guid.Empty)); // Guid.Empty for VendorId if not checking yet
-    return Results.Accepted();
-}).RequireAuthorization();
-
-app.MapPost("/ordering/bookings/{id}/reject", async (IMessageBus bus, Guid id) =>
-{
-    await bus.InvokeAsync(new Toyana.Contracts.RejectBooking(id, Guid.Empty, "Rejected by vendor"));
-    return Results.Accepted();
-}).RequireAuthorization();
+});
 
 app.Run();

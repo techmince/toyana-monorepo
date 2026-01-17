@@ -1,9 +1,9 @@
 using Marten;
-using Wolverine;
 using Toyana.Contracts;
 using Toyana.Payments.Aggregates;
 using Toyana.Payments.Interfaces;
 using Toyana.Payments.Services;
+using Wolverine;
 
 namespace Toyana.Payments.Features;
 

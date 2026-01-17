@@ -1,29 +1,34 @@
-using Microsoft.EntityFrameworkCore;
 using Marten;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.EntityFrameworkCore;
 using Toyana.Identity.Data;
-using Toyana.VendorCenter.Data;
 using Toyana.Ordering.Features.Bookings;
+using Toyana.VendorCenter.Data;
+using Wolverine.Http;
 
 namespace Toyana.Admin.Features.Dashboard;
 
 public static class DashboardEndpoints
 {
-    public static void MapDashboardEndpoints(this IEndpointRouteBuilder app)
+    [WolverineGet("/admin/dashboard")]
+    [Authorize(Roles = "Admin")]
+    [Tags("Admin")]
+    public static async Task<IResult> GetDashboard(
+        ApplicationDbContext identityDb, 
+        VendorDbContext vendorDb, 
+        IQuerySession orderSession)
     {
-        app.MapGet("/dashboard", async (ApplicationDbContext identityDb, VendorDbContext vendorDb, IQuerySession orderSession) =>
-        {
-            var clientCount = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.CountAsync(identityDb.ClientUsers);
-            var vendorCount = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.CountAsync(identityDb.VendorUsers);
-            var serviceCount = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.CountAsync(vendorDb.Services);
-            var bookingCount = await Marten.QueryableExtensions.CountAsync(orderSession.Query<Booking>());
+        var clientCount = await EntityFrameworkQueryableExtensions.CountAsync(identityDb.ClientUsers);
+        var vendorCount = await EntityFrameworkQueryableExtensions.CountAsync(identityDb.VendorUsers);
+        var serviceCount = await EntityFrameworkQueryableExtensions.CountAsync(vendorDb.Services);
+        var bookingCount = await QueryableExtensions.CountAsync(orderSession.Query<Booking>());
 
-            return Results.Ok(new 
-            {
-                Clients = clientCount,
-                Vendors = vendorCount,
-                Services = serviceCount,
-                Bookings = bookingCount
-            });
+        return Results.Ok(new 
+        {
+            Clients = clientCount,
+            Vendors = vendorCount,
+            Services = serviceCount,
+            Bookings = bookingCount
         });
     }
 }

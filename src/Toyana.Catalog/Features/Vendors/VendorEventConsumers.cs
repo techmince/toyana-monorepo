@@ -1,7 +1,7 @@
 using Marten;
-using Wolverine;
-using Toyana.Contracts;
 using Toyana.Catalog.Models;
+using Toyana.Contracts;
+using Wolverine;
 
 namespace Toyana.Catalog.Features.Vendors;
 

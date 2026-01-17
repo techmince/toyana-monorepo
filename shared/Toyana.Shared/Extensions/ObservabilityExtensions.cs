@@ -1,14 +1,14 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Npgsql; // For AddNpgsql
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Serilog;
+using Serilog.Enrichers.Span;
 using Serilog.Events;
-using Npgsql; // For AddNpgsql
-using Toyana.Shared.Middleware;
-using Serilog.Enrichers.Span; // Potentially needed if not in Serilog namespace
+using Toyana.Shared.Middleware; // Potentially needed if not in Serilog namespace
 
 namespace Toyana.Shared.Extensions;
 
@@ -78,7 +78,7 @@ public static class ObservabilityExtensions
             });
 
         // Add Global Exception Handler
-        services.AddExceptionHandler<Toyana.Shared.Middleware.GlobalExceptionHandler>();
+        services.AddExceptionHandler<GlobalExceptionHandler>();
         services.AddProblemDetails();
     }
 
@@ -87,11 +87,12 @@ public static class ObservabilityExtensions
         app.UseExceptionHandler(); // Uses GlobalExceptionHandler
         app.UseMiddleware<CorrelationIdMiddleware>();
         app.UseMiddleware<UserContextMiddleware>();
-        
         // Add Serilog Request Logging manually if preferred or rely on OpenTelemetry traces
-        // app.UseSerilogRequestLogging(); 
         // Serilog Request Logging is good for summarized logs.
-        app.UseSerilogRequestLogging();
+        app.UseSerilogRequestLogging(cfg =>
+        {
+            cfg.IncludeQueryInRequestPath = true;
+        });
 
         return app;
     }

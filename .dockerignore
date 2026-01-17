@@ -1,15 +1,4 @@
 **/.git
-**/.gitignore
-**/.vs
-**/.vscode
 **/bin
 **/obj
 **/node_modules
-*.md
-.env
-docker-compose.yml
-LICENSE
-README.md
-task.md
-implementation_plan.md
-walkthrough.md

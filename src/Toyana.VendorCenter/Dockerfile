@@ -1,10 +1,9 @@
-FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine AS base
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
 WORKDIR /app
 EXPOSE 8080
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false
-RUN apk add --no-cache icu-libs krb5-libs
 
-FROM mcr.microsoft.com/dotnet/sdk:10.0-alpine AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 COPY ["src/Toyana.VendorCenter/Toyana.VendorCenter.csproj", "src/Toyana.VendorCenter/"]
 COPY ["shared/Toyana.Contracts/Toyana.Contracts.csproj", "shared/Toyana.Contracts/"]

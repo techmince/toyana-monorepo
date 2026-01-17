@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
-using Wolverine;
 using Toyana.Contracts;
 using Toyana.VendorCenter.Data;
 using Toyana.VendorCenter.Models;
+using Wolverine;
 
 namespace Toyana.VendorCenter.Features.Vendors;
 

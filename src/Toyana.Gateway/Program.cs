@@ -1,6 +1,7 @@
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using Scalar.AspNetCore;
 
 using Toyana.Shared.Extensions; // Observability
 
@@ -8,6 +9,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Observability
 builder.AddToyanaObservability("gateway-api");
+builder.AddToyanaJsonOptions();
 
 // Add services to the container.
 var jwtKey = builder.Configuration["Jwt:Key"] ?? "ThisIsASecretKeyForToyanaProjectAndItMustBeLongEnough";
@@ -46,6 +48,22 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapReverseProxy();
+
+app.MapScalarApiReference(options =>
+{
+    options.WithTitle("Toyana API Gateway")
+        .WithTheme(ScalarTheme.DeepSpace)
+        .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient);
+    
+        options.AddDocument("auth", title: "auth", routePattern: "/auth/openapi/v1.json");
+        options.AddDocument("vendors", title: "vendors", routePattern: "/vendors/openapi/v1.json");
+        options.AddDocument("bookings", title: "bookings", routePattern: "/bookings/openapi/v1.json");
+        options.AddDocument("catalog", title: "catalog", routePattern: "/catalog/openapi/v1.json");
+        options.AddDocument("chat", title: "chat", routePattern: "/chat/openapi/v1.json");
+        options.AddDocument("admin", title: "admin", routePattern: "/admin/openapi/v1.json");
+        options.AddDocument("alerts", title: "alerts", routePattern: "/alerts/openapi/v1.json");
+        options.AddDocument("payments", title: "payments", routePattern: "/payments/openapi/v1.json");
+});
 
 app.MapGet("/", () => "Toyana.Gateway Running");
 

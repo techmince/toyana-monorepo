@@ -1,11 +1,12 @@
+using Microsoft.AspNetCore.Mvc;
 using Telegram.Bot;
 using Toyana.Shared.Extensions; // Observability
-using Microsoft.AspNetCore.Mvc;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Observability
 builder.AddToyanaObservability("alerts-api");
+builder.AddToyanaJsonOptions();
 
 // Telegram Bot
 // Get Token from Config or Env Var. For now, we expect it in config.

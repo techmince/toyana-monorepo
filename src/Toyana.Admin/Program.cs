@@ -1,33 +1,29 @@
+using System.Globalization;
+using System.Text;
 using Marten; // Marten extensions
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using StackExchange.Redis;
-using EF = Microsoft.EntityFrameworkCore; // Alias EF to avoid ambiguity
-using System.Text;
 using Toyana.Identity.Data; // Identity DbContext
-using Toyana.VendorCenter.Data; // Vendor DbContext
 using Toyana.Ordering.Features.Bookings; // Booking Logic
 using Toyana.Shared;
-using Wolverine;
-using Wolverine.RabbitMQ;
 // using Microsoft.OpenApi.Models; // Removed to fix build
-
 using Toyana.Shared.Extensions; // Observability
-using Toyana.Admin.Features.Dashboard;
-using Toyana.Admin.Features.Users;
-using Toyana.Admin.Features.Vendors;
-using Toyana.Admin.Features.Bookings;
-using Toyana.Admin.Features.Payments;
-using Toyana.Admin.Features.Cache;
+using Toyana.VendorCenter.Data; // Vendor DbContext
+using Wolverine;
+using Wolverine.Http;
+using Wolverine.RabbitMQ;
+using EF = Microsoft.EntityFrameworkCore; // Alias EF to avoid ambiguity
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(); // Basic config only
+builder.AddToyanaOpenApi();
 
 // Observability
 builder.AddToyanaObservability("admin-api");
+builder.AddToyanaJsonOptions();
 
 // --- DATABASES (READ ACCESS) ---
 
@@ -35,13 +31,17 @@ builder.AddToyanaObservability("admin-api");
 var identityConn = builder.Configuration.GetConnectionString("IdentityConnection") 
                    ?? "Host=localhost;Port=5432;Database=toyana_identity;Username=postgres;Password=postgres";
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(identityConn));
+    options.UseNpgsql(identityConn)
+        .UseSnakeCaseNamingConvention(CultureInfo.InvariantCulture)
+    );
 
 // 2. Vendor DB (EF Core)
 var vendorConn = builder.Configuration.GetConnectionString("VendorConnection") 
                  ?? "Host=localhost;Port=5432;Database=toyana_vendor;Username=postgres;Password=postgres";
 builder.Services.AddDbContext<VendorDbContext>(options =>
-    options.UseNpgsql(vendorConn));
+    options.UseNpgsql(vendorConn)
+        .UseSnakeCaseNamingConvention(CultureInfo.InvariantCulture)
+    );
 
 // 3. Ordering DB (Marten)
 var orderingConn = builder.Configuration.GetConnectionString("OrderingConnection") 
@@ -86,6 +86,8 @@ builder.Host.UseWolverine(opts =>
     // Add other commands as needed
 });
 
+builder.Services.AddWolverineHttp();
+
 var app = builder.Build();
 
 app.UseToyanaObservability();
@@ -93,24 +95,16 @@ app.UseToyanaObservability();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+
 }
 
+app.UseToyanaOpenApi();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// --- ADMIN ENDPOINTS ---
-
-// Ensure Admin Role
-var adminGroup = app.MapGroup("/admin").RequireAuthorization(policy => 
-    policy.RequireRole("Admin"));
-
-adminGroup.MapDashboardEndpoints();
-adminGroup.MapUsersEndpoints();
-adminGroup.MapVendorsEndpoints();
-adminGroup.MapBookingsEndpoints();
-adminGroup.MapPaymentsEndpoints();
-adminGroup.MapCacheEndpoints();
+// Wolverine HTTP Endpoints
+app.MapWolverineEndpoints(opts =>
+{
+});
 
 app.Run();

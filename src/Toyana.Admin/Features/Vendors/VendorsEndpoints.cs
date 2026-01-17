@@ -1,15 +1,17 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Toyana.VendorCenter.Data;
+using Wolverine.Http;
 
 namespace Toyana.Admin.Features.Vendors;
 
 public static class VendorsEndpoints
 {
-    public static void MapVendorsEndpoints(this IEndpointRouteBuilder app)
+    [WolverineGet("/admin/vendors")]
+    [Authorize(Roles = "Admin")]
+    [Tags("Admin")]
+    public static async Task<IResult> ListVendors(VendorDbContext db)
     {
-        app.MapGet("/vendors", async (VendorDbContext db) =>
-        {
-            return Results.Ok(await db.Vendors.ToListAsync());
-        });
+        return Results.Ok(await db.Vendors.ToListAsync());
     }
 }

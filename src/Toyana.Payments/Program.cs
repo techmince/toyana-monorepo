@@ -1,16 +1,17 @@
 using JasperFx;
 using Marten;
-using Wolverine;
-using Wolverine.Marten;
-using Wolverine.RabbitMQ;
 using Toyana.Payments.Interfaces;
 using Toyana.Payments.Services;
-using Toyana.Shared.Extensions; // Observability
+using Toyana.Shared.Extensions;
+using Wolverine;
+using Wolverine.Marten;
+using Wolverine.RabbitMQ; // Observability
 
 var builder = Host.CreateApplicationBuilder(args);
 
 // Observability
 builder.AddToyanaObservability("payments-worker");
+builder.AddToyanaJsonOptions();
 
 // DI
 builder.Services.AddSingleton<IFeeStrategy, StandardFeeStrategy>();

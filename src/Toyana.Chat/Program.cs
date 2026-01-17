@@ -6,6 +6,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Observability
 builder.AddToyanaObservability("chat-api");
+builder.AddToyanaJsonOptions();
 
 // Add SignalR with Redis Backplane
 var redisConn = builder.Configuration.GetConnectionString("Valkey") ?? "localhost:6379";
