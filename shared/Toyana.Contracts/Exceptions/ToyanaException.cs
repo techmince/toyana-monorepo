@@ -1,5 +1,3 @@
-using System;
-
 namespace Toyana.Contracts.Exceptions;
 
 public abstract class ToyanaException : Exception

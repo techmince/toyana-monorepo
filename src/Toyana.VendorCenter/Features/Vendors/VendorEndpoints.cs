@@ -1,12 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Wolverine;
 using Wolverine.Http;
 using Toyana.Contracts;
 using Toyana.VendorCenter.Data;
-using Toyana.VendorCenter.Features.Vendors;
-using System.Security.Claims;
 using System.Security.Claims;
 using Toyana.Shared;
 

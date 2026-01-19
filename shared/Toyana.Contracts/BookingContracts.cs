@@ -1,5 +1,3 @@
-using System;
-
 namespace Toyana.Contracts;
 
 // Commands

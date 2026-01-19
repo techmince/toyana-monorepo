@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Security.Cryptography;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -80,11 +81,13 @@ if (app.Environment.IsDevelopment())
     // Seed Admin (Idempotent check)
     if (!await db.AdminUsers.AnyAsync())
     {
+        var salt = RandomNumberGenerator.GetBytes(32);
         db.AdminUsers.Add(new AdminUser 
         { 
             Id = Guid.NewGuid(), 
             Username = "admin", 
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword("admin123") 
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword("admin123" + Convert.ToBase64String(salt)),
+            Salt = Convert.ToBase64String(salt)
         });
         await db.SaveChangesAsync();
     }

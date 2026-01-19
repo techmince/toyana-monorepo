@@ -33,7 +33,7 @@ public static class UsersEndpoints
         { 
             client.IsBanned = true; 
             await db.SaveChangesAsync(); 
-            await bus.PublishAsync(new Contracts.UserBanned(id, "Banned by Admin"));
+            await bus.PublishAsync(new UserBanned(id, "Banned by Admin"));
             return Results.Ok("User Banned"); 
         }
         
@@ -42,7 +42,7 @@ public static class UsersEndpoints
         { 
             vendor.IsBanned = true; 
             await db.SaveChangesAsync(); 
-            await bus.PublishAsync(new Contracts.UserBanned(id, "Banned by Admin"));
+            await bus.PublishAsync(new UserBanned(id, "Banned by Admin"));
             return Results.Ok("Vendor Banned"); 
         }
         

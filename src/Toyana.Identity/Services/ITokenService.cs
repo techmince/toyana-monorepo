@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using Toyana.Identity.Models;
 
 namespace Toyana.Identity.Services;

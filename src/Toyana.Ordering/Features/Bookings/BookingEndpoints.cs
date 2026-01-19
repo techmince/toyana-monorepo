@@ -1,13 +1,10 @@
 using Marten;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
 using Wolverine;
 using Wolverine.Http;
 using Toyana.Shared;
 using Toyana.Contracts;
-using Toyana.Shared.Extensions;
 using System.Security.Claims;
-using Toyana.Ordering.Features.Bookings;
 
 namespace Toyana.Ordering.Features.Bookings;
 
@@ -87,7 +84,7 @@ public static class BookingEndpoints
         Guid id, 
         IMessageBus bus)
     {
-        await bus.InvokeAsync(new Toyana.Contracts.RejectBooking(id, Guid.Empty, "Rejected by vendor"));
+        await bus.InvokeAsync(new RejectBooking(id, Guid.Empty, "Rejected by vendor"));
         return Results.Accepted();
     }
 }

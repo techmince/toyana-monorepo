@@ -1,5 +1,3 @@
-using Marten.Schema;
-
 namespace Toyana.Catalog.Models;
 
 public class VendorReadModel

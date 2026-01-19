@@ -1,5 +1,3 @@
-using Xunit;
-
 namespace Toyana.E2E.Tests;
 
 [CollectionDefinition("ToyanaE2E")]

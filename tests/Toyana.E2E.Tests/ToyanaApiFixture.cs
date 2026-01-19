@@ -1,7 +1,5 @@
-using System.Threading.Tasks;
 using Npgsql;
 using RestSharp;
-using Xunit;
 
 namespace Toyana.E2E.Tests;
 

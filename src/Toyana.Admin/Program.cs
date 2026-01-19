@@ -6,15 +6,15 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using StackExchange.Redis;
 using Toyana.Identity.Data; // Identity DbContext
-using Toyana.Ordering.Features.Bookings; // Booking Logic
-using Toyana.Shared;
+// Booking Logic
 // using Microsoft.OpenApi.Models; // Removed to fix build
 using Toyana.Shared.Extensions; // Observability
 using Toyana.VendorCenter.Data; // Vendor DbContext
 using Wolverine;
 using Wolverine.Http;
 using Wolverine.RabbitMQ;
-using EF = Microsoft.EntityFrameworkCore; // Alias EF to avoid ambiguity
+
+// Alias EF to avoid ambiguity
 
 var builder = WebApplication.CreateBuilder(args);
 

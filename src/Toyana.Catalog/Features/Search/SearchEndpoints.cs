@@ -1,6 +1,4 @@
 using Marten;
-using Microsoft.AspNetCore.Mvc;
-using Wolverine;
 using Wolverine.Http;
 using Toyana.Catalog.Models;
 

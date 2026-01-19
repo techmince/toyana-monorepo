@@ -1,7 +1,6 @@
 using System.Net;
 using FluentAssertions;
 using RestSharp;
-using Xunit;
 
 namespace Toyana.E2E.Tests;
 

@@ -4,7 +4,6 @@ using Marten;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Toyana.Ordering.Features.Bookings;
-using Toyana.Shared;
 using Toyana.Shared.Extensions;
 using Wolverine;
 using Wolverine.Http;

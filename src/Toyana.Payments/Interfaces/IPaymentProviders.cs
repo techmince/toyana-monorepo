@@ -1,5 +1,3 @@
-using System.Threading.Tasks;
-
 namespace Toyana.Payments.Interfaces;
 
 public interface IDebitCardProvider

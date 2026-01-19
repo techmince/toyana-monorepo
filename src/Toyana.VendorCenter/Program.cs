@@ -2,12 +2,10 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using Toyana.Contracts;
 using Toyana.Contracts.Security;
-using Toyana.Shared;
 using Toyana.Shared.Extensions;
 using Toyana.VendorCenter.Data;
-using Toyana.VendorCenter.Features.Vendors; // Handlers
+// Handlers
 using Wolverine;
 using Wolverine.Http;
 using Wolverine.RabbitMQ; // Observability

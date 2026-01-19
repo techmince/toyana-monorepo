@@ -1,5 +1,3 @@
-using System;
-
 namespace Toyana.Contracts.Security;
 
 public record struct VendorPermission

@@ -38,7 +38,7 @@ public static class BookingsEndpoints
         IDocumentSession session)
     {
         // Append event to stream to adjust price
-        session.Events.Append(id, new Contracts.BookingPriceAdjusted(id, newAmount, "Admin Override", DateTime.UtcNow));
+        session.Events.Append(id, new BookingPriceAdjusted(id, newAmount, "Admin Override", DateTime.UtcNow));
         await session.SaveChangesAsync();
         return Results.Ok("Price Adjusted");
     }

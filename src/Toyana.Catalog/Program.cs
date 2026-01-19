@@ -1,7 +1,5 @@
 using JasperFx;
 using Marten;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
 using Toyana.Catalog.Models;
 using Toyana.Shared.Extensions;
 using Wolverine;
