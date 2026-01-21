@@ -12,7 +12,7 @@ public class SetAvailabilityHandler
     {
         // Check if slot exists
         var existing = await db.AvailabilitySlots
-            .FirstOrDefaultAsync(a => a.VendorId == command.VendorId && a.Date == command.Date);
+                               .FirstOrDefaultAsync(a => a.VendorId == command.VendorId && a.Date == command.Date);
 
         var statusEnum = Enum.Parse<AvailabilityStatus>(command.Status);
 
@@ -23,12 +23,12 @@ public class SetAvailabilityHandler
         else
         {
             var slot = new Availability
-            {
-                Id = Guid.NewGuid(),
-                VendorId = command.VendorId,
-                Date = command.Date,
-                Status = statusEnum
-            };
+                       {
+                           Id       = Guid.NewGuid(),
+                           VendorId = command.VendorId,
+                           Date     = command.Date,
+                           Status   = statusEnum
+                       };
             db.AvailabilitySlots.Add(slot);
         }
 

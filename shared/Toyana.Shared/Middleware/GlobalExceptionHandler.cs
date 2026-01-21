@@ -19,12 +19,12 @@ public class GlobalExceptionHandler : IExceptionHandler
         _logger.LogError(exception, "An unhandled exception has occurred while executing the request.");
 
         var problemDetails = new ProblemDetails
-        {
-            Status = StatusCodes.Status500InternalServerError,
-            Title = "An error occurred while processing your request.",
-            Type = "https://tools.ietf.org/html/rfc7231#section-6.6.1",
-            Detail = exception.Message 
-        };
+                             {
+                                 Status = StatusCodes.Status500InternalServerError,
+                                 Title  = "An error occurred while processing your request.",
+                                 Type   = "https://tools.ietf.org/html/rfc7231#section-6.6.1",
+                                 Detail = exception.Message
+                             };
 
         httpContext.Response.StatusCode = StatusCodes.Status500InternalServerError;
         await httpContext.Response.WriteAsJsonAsync(problemDetails, cancellationToken);

@@ -1,13 +1,18 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
-using Npgsql; // For AddNpgsql
+using Microsoft.Extensions.Hosting;
+using Npgsql;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Serilog;
 using Serilog.Enrichers.Span;
 using Serilog.Events;
-using Toyana.Shared.Middleware; // Potentially needed if not in Serilog namespace
+using Serilog.Sinks.OpenTelemetry;
+using Toyana.Shared.Middleware;
+// For AddNpgsql
+
+// Potentially needed if not in Serilog namespace
 
 namespace Toyana.Shared.Extensions;
 
@@ -21,7 +26,7 @@ public static class ObservabilityExtensions
         return builder;
     }
 
-    public static Microsoft.Extensions.Hosting.IHostApplicationBuilder AddToyanaObservability(this Microsoft.Extensions.Hosting.IHostApplicationBuilder builder, string serviceName)
+    public static IHostApplicationBuilder AddToyanaObservability(this IHostApplicationBuilder builder, string serviceName)
     {
         ConfigureLogger(serviceName);
         builder.Services.AddSerilog();
@@ -32,49 +37,43 @@ public static class ObservabilityExtensions
     private static void ConfigureLogger(string serviceName)
     {
         Log.Logger = new LoggerConfiguration()
-            .MinimumLevel.Information()
-            .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
-            .MinimumLevel.Override("Microsoft.Hosting.Lifetime", LogEventLevel.Information)
-            .Enrich.FromLogContext()
-            .Enrich.WithSpan() 
-            .WriteTo.Console()
-            .WriteTo.OpenTelemetry(options =>
-            {
-                options.Endpoint = "http://otel-collector:4318/v1/logs"; 
-                options.Protocol = Serilog.Sinks.OpenTelemetry.OtlpProtocol.HttpProtobuf;
-                options.ResourceAttributes = new Dictionary<string, object>
-                {
-                    ["service.name"] = serviceName
-                };
-            })
-            .CreateLogger();
+                    .MinimumLevel.Information()
+                    .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+                    .MinimumLevel.Override("Microsoft.Hosting.Lifetime", LogEventLevel.Information)
+                    .Enrich.FromLogContext()
+                    .Enrich.WithSpan()
+                    .WriteTo.Console()
+                    .WriteTo.OpenTelemetry(options =>
+                                           {
+                                               options.Endpoint = "http://otel-collector:4318/v1/logs";
+                                               options.Protocol = OtlpProtocol.HttpProtobuf;
+                                               options.ResourceAttributes = new Dictionary<string, object>
+                                                                            {
+                                                                                ["service.name"] = serviceName
+                                                                            };
+                                           })
+                    .CreateLogger();
     }
 
     private static void ConfigureOpenTelemetry(IServiceCollection services, string serviceName)
     {
         services.AddOpenTelemetry()
-            .ConfigureResource(resource => resource.AddService(serviceName))
-            .WithTracing(tracing =>
-            {
-                tracing
-                    .AddAspNetCoreInstrumentation()
-                    .AddHttpClientInstrumentation()
-                    .AddNpgsql() // Postgres Tracing
-                    .AddOtlpExporter(opts => 
-                    {
-                        opts.Endpoint = new Uri("http://otel-collector:4317");
-                    });
-            })
-            .WithMetrics(metrics =>
-            {
-                metrics
-                    .AddAspNetCoreInstrumentation()
-                    .AddRuntimeInstrumentation()
-                    .AddOtlpExporter(opts => 
-                    {
-                        opts.Endpoint = new Uri("http://otel-collector:4317");
-                    });
-            });
+                .ConfigureResource(resource => resource.AddService(serviceName))
+                .WithTracing(tracing =>
+                             {
+                                 tracing
+                                    .AddAspNetCoreInstrumentation()
+                                    .AddHttpClientInstrumentation()
+                                    .AddNpgsql() // Postgres Tracing
+                                    .AddOtlpExporter(opts => { opts.Endpoint = new Uri("http://otel-collector:4317"); });
+                             })
+                .WithMetrics(metrics =>
+                             {
+                                 metrics
+                                    .AddAspNetCoreInstrumentation()
+                                    .AddRuntimeInstrumentation()
+                                    .AddOtlpExporter(opts => { opts.Endpoint = new Uri("http://otel-collector:4317"); });
+                             });
 
         // Add Global Exception Handler
         services.AddExceptionHandler<GlobalExceptionHandler>();
@@ -88,10 +87,7 @@ public static class ObservabilityExtensions
         app.UseMiddleware<UserContextMiddleware>();
         // Add Serilog Request Logging manually if preferred or rely on OpenTelemetry traces
         // Serilog Request Logging is good for summarized logs.
-        app.UseSerilogRequestLogging(cfg =>
-        {
-            cfg.IncludeQueryInRequestPath = true;
-        });
+        app.UseSerilogRequestLogging(cfg => { cfg.IncludeQueryInRequestPath = true; });
 
         return app;
     }

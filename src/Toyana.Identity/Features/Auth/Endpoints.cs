@@ -1,8 +1,8 @@
-using Microsoft.AspNetCore.Authorization;
-using Wolverine.Http;
-using Toyana.Identity.Services;
-using Toyana.Identity.Models;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
+using Toyana.Identity.Models;
+using Toyana.Identity.Services;
+using Wolverine.Http;
 
 namespace Toyana.Identity.Features.Auth;
 
@@ -11,103 +11,115 @@ public static class AuthEndpoints
 {
     [WolverinePost("/auth/client/register")]
     [Tags("Auth")]
-    public static async Task<IResult> RegisterClient(
-        RegisterRequest request, 
-        AuthService auth)
+    public static async Task<IResult> RegisterClient
+    (
+        RegisterRequest request,
+        AuthService auth
+    )
     {
-        try 
-        { 
-            return Results.Ok(await auth.RegisterClientAsync(request)); 
+        try
+        {
+            return Results.Ok(await auth.RegisterClientAsync(request));
         }
-        catch (Exception ex) 
-        { 
-            return Results.BadRequest(ex.Message); 
+        catch (Exception ex)
+        {
+            return Results.BadRequest(ex.Message);
         }
     }
 
     [WolverinePost("/auth/client/login")]
     [Tags("Auth")]
-    public static async Task<IResult> LoginClient(
-        LoginRequest request, 
-        AuthService auth)
+    public static async Task<IResult> LoginClient
+    (
+        LoginRequest request,
+        AuthService auth
+    )
     {
-        try 
-        { 
-            return Results.Ok(await auth.LoginClientAsync(request)); 
+        try
+        {
+            return Results.Ok(await auth.LoginClientAsync(request));
         }
-        catch (Exception ex) 
-        { 
-            return Results.Unauthorized(); 
+        catch (Exception ex)
+        {
+            return Results.Unauthorized();
         }
     }
 
     [WolverinePost("/auth/vendor/register")]
     [Tags("Auth")]
-    public static async Task<IResult> RegisterVendor(
-        VendorRegisterRequest request, 
-        AuthService auth)
+    public static async Task<IResult> RegisterVendor
+    (
+        VendorRegisterRequest request,
+        AuthService auth
+    )
     {
-        try 
-        { 
-            return Results.Ok(await auth.RegisterVendorOwnerAsync(request)); 
+        try
+        {
+            return Results.Ok(await auth.RegisterVendorOwnerAsync(request));
         }
-        catch (Exception ex) 
-        { 
-            return Results.BadRequest(ex.Message); 
+        catch (Exception ex)
+        {
+            return Results.BadRequest(ex.Message);
         }
     }
 
     [WolverinePost("/auth/vendor/login")]
     [Tags("Auth")]
-    public static async Task<IResult> LoginVendor(
-        LoginRequest request, 
-        AuthService auth)
+    public static async Task<IResult> LoginVendor
+    (
+        LoginRequest request,
+        AuthService auth
+    )
     {
-        try 
-        { 
-            return Results.Ok(await auth.LoginVendorAsync(request)); 
+        try
+        {
+            return Results.Ok(await auth.LoginVendorAsync(request));
         }
-        catch (Exception ex) 
-        { 
-            return Results.Unauthorized(); 
+        catch (Exception ex)
+        {
+            return Results.Unauthorized();
         }
     }
 
     [WolverinePost("/auth/admin/login")]
     [Tags("Auth")]
-    public static async Task<IResult> LoginAdmin(
-        LoginRequest request, 
-        AuthService auth)
+    public static async Task<IResult> LoginAdmin
+    (
+        LoginRequest request,
+        AuthService auth
+    )
     {
-        try 
-        { 
-            return Results.Ok(await auth.LoginAdminAsync(request)); 
+        try
+        {
+            return Results.Ok(await auth.LoginAdminAsync(request));
         }
-        catch (Exception ex) 
-        { 
-            return Results.Unauthorized(); 
+        catch (Exception ex)
+        {
+            return Results.Unauthorized();
         }
     }
 
     [WolverinePost("/auth/vendor/users")]
-    [Authorize] // Requires Valid Token
+    [Authorize(Policy = "VendorOwnerOnly")] // Changed from just [Authorize]
     [Tags("Auth")]
-    public static async Task<IResult> CreateSubUser(
-        CreateSubUserRequest request, 
-        AuthService auth, 
-        ClaimsPrincipal user)
+    public static async Task<IResult> CreateSubUser
+    (
+        CreateSubUserRequest request,
+        AuthService auth,
+        ClaimsPrincipal user
+    )
     {
         var userIdString = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var userId))
             return Results.Unauthorized();
 
-        try 
-        { 
-            return Results.Ok(await auth.CreateSubUserAsync(userId, request)); 
+        try
+        {
+            return Results.Ok(await auth.CreateSubUserAsync(userId, request));
         }
-        catch (Exception ex) 
-        { 
-            return Results.BadRequest(ex.Message); 
+        catch (Exception ex)
+        {
+            return Results.BadRequest(ex.Message);
         }
     }
 }

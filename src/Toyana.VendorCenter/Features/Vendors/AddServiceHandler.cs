@@ -10,13 +10,13 @@ public class AddServiceHandler
     public static async Task Handle(AddService command, VendorDbContext db, IMessageBus bus)
     {
         var service = new Service
-        {
-            Id = Guid.NewGuid(),
-            VendorId = command.VendorId,
-            Name = command.Name,
-            Description = command.Description,
-            Price = command.Price
-        };
+                      {
+                          Id          = Guid.NewGuid(),
+                          VendorId    = command.VendorId,
+                          Name        = command.Name,
+                          Description = command.Description,
+                          Price       = command.Price
+                      };
 
         db.Services.Add(service);
         await db.SaveChangesAsync();

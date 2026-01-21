@@ -1,6 +1,7 @@
 using Toyana.Chat.Hubs;
+using Toyana.Shared.Extensions;
 
-using Toyana.Shared.Extensions; // Observability
+// Observability
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,9 +12,7 @@ builder.AddToyanaJsonOptions();
 // Add SignalR with Redis Backplane
 var redisConn = builder.Configuration.GetConnectionString("Valkey") ?? "localhost:6379";
 builder.Services.AddSignalR()
-    .AddStackExchangeRedis(redisConn, options => {
-        options.Configuration.ChannelPrefix = "Toyana.Chat";
-    });
+       .AddStackExchangeRedis(redisConn, options => { options.Configuration.ChannelPrefix = "Toyana.Chat"; });
 
 var app = builder.Build();
 

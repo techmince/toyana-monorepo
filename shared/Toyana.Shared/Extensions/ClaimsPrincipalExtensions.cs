@@ -6,9 +6,9 @@ public static class ClaimsPrincipalExtensions
 {
     public static Guid? GetUserId(this ClaimsPrincipal principal)
     {
-        var id = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value 
-                 ?? principal.FindFirst("sub")?.Value;
-                 
+        var id = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value
+              ?? principal.FindFirst("sub")?.Value;
+
         return Guid.TryParse(id, out var guid) ? guid : null;
     }
 
@@ -17,10 +17,10 @@ public static class ClaimsPrincipalExtensions
         var id = principal.FindFirst("vendorId")?.Value;
         return Guid.TryParse(id, out var guid) ? guid : null;
     }
-    
+
     public static string? GetEmail(this ClaimsPrincipal principal)
     {
-        return principal.FindFirst(ClaimTypes.Email)?.Value 
-               ?? principal.FindFirst("email")?.Value;
+        return principal.FindFirst(ClaimTypes.Email)?.Value
+            ?? principal.FindFirst("email")?.Value;
     }
 }

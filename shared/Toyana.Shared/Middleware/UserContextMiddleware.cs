@@ -15,8 +15,8 @@ public class UserContextMiddleware
 
     public async Task Invoke(HttpContext context)
     {
-        var userId = context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        var userType = context.User?.FindFirst(ClaimTypes.Role)?.Value;
+        var userId        = context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userType      = context.User?.FindFirst(ClaimTypes.Role)?.Value;
         var correlationId = context.TraceIdentifier; // Or get from header if CorrelationIdMiddleware runs before
 
         // Push properies to Serilog LogContext

@@ -2,8 +2,9 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
+using Toyana.Shared.Extensions;
 
-using Toyana.Shared.Extensions; // Observability
+// Observability
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,33 +13,33 @@ builder.AddToyanaObservability("gateway-api");
 builder.AddToyanaJsonOptions();
 
 // Add services to the container.
-var jwtKey = builder.Configuration["Jwt:Key"] ?? "ThisIsASecretKeyForToyanaProjectAndItMustBeLongEnough";
-var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "Toyana";
+var jwtKey      = builder.Configuration["Jwt:Key"]      ?? "ThisIsASecretKeyForToyanaProjectAndItMustBeLongEnough";
+var jwtIssuer   = builder.Configuration["Jwt:Issuer"]   ?? "Toyana";
 var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "Toyana";
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = jwtIssuer,
-            ValidAudience = jwtAudience,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
-        };
-    });
+       .AddJwtBearer(options =>
+                     {
+                         options.TokenValidationParameters = new TokenValidationParameters
+                                                             {
+                                                                 ValidateIssuer           = true,
+                                                                 ValidateAudience         = true,
+                                                                 ValidateLifetime         = true,
+                                                                 ValidateIssuerSigningKey = true,
+                                                                 ValidIssuer              = jwtIssuer,
+                                                                 ValidAudience            = jwtAudience,
+                                                                 IssuerSigningKey         = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
+                                                             };
+                     });
 
 builder.Services.AddAuthorization(options =>
-{
-    options.AddPolicy("Authenticated", policy => policy.RequireAuthenticatedUser());
-    options.AddPolicy("RequireVendor", policy => policy.RequireRole("Vendor"));
-});
+                                  {
+                                      options.AddPolicy("Authenticated", policy => policy.RequireAuthenticatedUser());
+                                      options.AddPolicy("RequireVendor", policy => policy.RequireRole("Vendor"));
+                                  });
 
 builder.Services.AddReverseProxy()
-    .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
+       .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
 
 var app = builder.Build();
 
@@ -50,20 +51,20 @@ app.UseAuthorization();
 app.MapReverseProxy();
 
 app.MapScalarApiReference(options =>
-{
-    options.WithTitle("Toyana API Gateway")
-        .WithTheme(ScalarTheme.DeepSpace)
-        .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient);
-    
-        options.AddDocument("auth", title: "auth", routePattern: "/auth/openapi/v1.json");
-        options.AddDocument("vendors", title: "vendors", routePattern: "/vendors/openapi/v1.json");
-        options.AddDocument("bookings", title: "bookings", routePattern: "/bookings/openapi/v1.json");
-        options.AddDocument("catalog", title: "catalog", routePattern: "/catalog/openapi/v1.json");
-        options.AddDocument("chat", title: "chat", routePattern: "/chat/openapi/v1.json");
-        options.AddDocument("admin", title: "admin", routePattern: "/admin/openapi/v1.json");
-        options.AddDocument("alerts", title: "alerts", routePattern: "/alerts/openapi/v1.json");
-        options.AddDocument("payments", title: "payments", routePattern: "/payments/openapi/v1.json");
-});
+                          {
+                              options.WithTitle("Toyana API Gateway")
+                                     .WithTheme(ScalarTheme.DeepSpace)
+                                     .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient);
+
+                              options.AddDocument("auth",     "auth",     "/auth/openapi/v1.json");
+                              options.AddDocument("vendors",  "vendors",  "/vendors/openapi/v1.json");
+                              options.AddDocument("bookings", "bookings", "/bookings/openapi/v1.json");
+                              options.AddDocument("catalog",  "catalog",  "/catalog/openapi/v1.json");
+                              options.AddDocument("chat",     "chat",     "/chat/openapi/v1.json");
+                              options.AddDocument("admin",    "admin",    "/admin/openapi/v1.json");
+                              options.AddDocument("alerts",   "alerts",   "/alerts/openapi/v1.json");
+                              options.AddDocument("payments", "payments", "/payments/openapi/v1.json");
+                          });
 
 app.MapGet("/", () => "Toyana.Gateway Running");
 

@@ -5,20 +5,19 @@ namespace Toyana.E2E.Tests;
 
 public class ToyanaApiFixture : IAsyncLifetime
 {
-    public RestClient Client { get; private set; }
-    
     // Connection Strings (pointing to localhost exposed ports)
-    private const string IdentityDb = "Host=localhost;Port=5432;Database=toyana_identity;Username=postgres;Password=postgres;Include Error Detail=true";
-    private const string VendorDb = "Host=localhost;Port=5432;Database=toyana_vendor;Username=postgres;Password=postgres;Include Error Detail=true";
-    private const string CatalogDb = "Host=localhost;Port=5432;Database=toyana_catalog;Username=postgres;Password=postgres;Include Error Detail=true";
-    private const string OrderingDb = "Host=localhost;Port=5432;Database=toyana_ordering;Username=postgres;Password=postgres;Include Error Detail=true";
+    private const string     IdentityDb = "Host=localhost;Port=5432;Database=toyana_identity;Username=postgres;Password=postgres;Include Error Detail=true";
+    private const string     VendorDb   = "Host=localhost;Port=5432;Database=toyana_vendor;Username=postgres;Password=postgres;Include Error Detail=true";
+    private const string     CatalogDb  = "Host=localhost;Port=5432;Database=toyana_catalog;Username=postgres;Password=postgres;Include Error Detail=true";
+    private const string     OrderingDb = "Host=localhost;Port=5432;Database=toyana_ordering;Username=postgres;Password=postgres;Include Error Detail=true";
+    public        RestClient Client { get; private set; }
 
     public Task InitializeAsync()
     {
         var options = new RestClientOptions("http://localhost:8080")
-        {
-            Timeout = TimeSpan.FromSeconds(30)
-        };
+                      {
+                          Timeout = TimeSpan.FromSeconds(30)
+                      };
         Client = new RestClient(options);
         return Task.CompletedTask;
     }
@@ -29,15 +28,15 @@ public class ToyanaApiFixture : IAsyncLifetime
         // Notes: 
         // 1. We SKIP truncating "Users" in Identity to preserve the Admin user seeded by the app.
         // 2. We truncate Vendor/Ordering tables.
-        
+
         await TruncateTable(VendorDb, "Vendors", "ServicePackages", "AvailabilityCalendar");
-        
+
         // Catalog & Ordering use Marten, so tables are prefixed with mt_doc_ or mt_events
         // We will try running a rough cleanup. If tables don't exist yet (first run empty), catch exception.
-        
-        await TruncateTable(CatalogDb, "mt_doc_vendorreadmodel");
-        await TruncateTable(OrderingDb, "mt_doc_booking", "wolverine_outbox", "wolverine_incoming"); 
-        
+
+        await TruncateTable(CatalogDb,  "mt_doc_vendorreadmodel");
+        await TruncateTable(OrderingDb, "mt_doc_booking", "wolverine_outbox", "wolverine_incoming");
+
         // Also clean wolverine message queues in DBs if possible? 
         // For simplicity, just business tables.
     }
@@ -55,13 +54,13 @@ public class ToyanaApiFixture : IAsyncLifetime
                 // Using CASCADE to handle FKs
                 // Enclosing in double quotes to handle case sensitivity if Marten users lower case or whatever.
                 // Marten usually uses lowercase table names.
-                
-                var cmdText = $"TRUNCATE TABLE \"{table.ToLower()}\" CASCADE"; 
+
+                var cmdText = $"TRUNCATE TABLE \"{table.ToLower()}\" CASCADE";
                 // Note: Marten tables are usually lowercase.
-                
+
                 // However, Npgsql might need checking. Docker postgres creates schema "public".
                 // We'll wrap in try-catch to ignore if table doesn't exist (e.g. tests failed before creation).
-                try 
+                try
                 {
                     await using var cmd = new NpgsqlCommand(cmdText, conn);
                     await cmd.ExecuteNonQueryAsync();

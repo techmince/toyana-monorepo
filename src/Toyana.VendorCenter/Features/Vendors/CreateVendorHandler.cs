@@ -11,13 +11,13 @@ public class CreateVendorHandler
     public static async Task Handle(CreateVendor command, VendorDbContext db, IMessageBus bus)
     {
         var vendor = new Vendor
-        {
-            Id = Guid.NewGuid(),
-            BusinessName = command.BusinessName,
-            TaxId = command.TaxId,
-            Category = command.Category,
-            IsVerified = false // Pending verification
-        };
+                     {
+                         Id           = Guid.NewGuid(),
+                         BusinessName = command.BusinessName,
+                         TaxId        = command.TaxId,
+                         Category     = command.Category,
+                         IsVerified   = false // Pending verification
+                     };
 
         db.Vendors.Add(vendor);
         await db.SaveChangesAsync();

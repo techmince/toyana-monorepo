@@ -9,21 +9,29 @@ public static class MigrationExtensions
 {
     public static async Task ApplyMigrationAsync<TContext>(this IHost app) where TContext : DbContext
     {
-        using var scope = app.Services.CreateScope();
-        var services = scope.ServiceProvider;
-        var logger = services.GetRequiredService<ILogger<TContext>>();
-        var context = services.GetRequiredService<TContext>();
+        using var scope    = app.Services.CreateScope();
+        var       services = scope.ServiceProvider;
+        var       logger   = services.GetRequiredService<ILogger<TContext>>();
+        var       context  = services.GetRequiredService<TContext>();
 
         try
         {
             // Using EnsureCreated for now as migration generation is blocked by .NET 10 tooling issues.
             // This ensures the schema exists.
+            if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development")
+            {
+                await context.Database.EnsureDeletedAsync();
+                await context.Database.EnsureCreatedAsync();
+            }
+
             await context.Database.MigrateAsync();
-            logger.LogInformation("Successfully ensured database creation for context {ContextName}", typeof(TContext).Name);
+            logger.LogInformation("Successfully ensured database creation for context {ContextName}",
+                                  typeof(TContext).Name);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "An error occurred while applying migrations for context {ContextName}", typeof(TContext).Name);
+            logger.LogError(ex, "An error occurred while applying migrations for context {ContextName}",
+                            typeof(TContext).Name);
             throw;
         }
     }

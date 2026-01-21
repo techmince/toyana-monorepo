@@ -10,11 +10,11 @@ public class VendorEventConsumers
     public static void Consume(VendorCreated @event, IDocumentSession session)
     {
         var model = new VendorReadModel
-        {
-            Id = @event.VendorId,
-            BusinessName = @event.BusinessName,
-            Category = @event.Category
-        };
+                    {
+                        Id           = @event.VendorId,
+                        BusinessName = @event.BusinessName,
+                        Category     = @event.Category
+                    };
         session.Store(model);
     }
 
@@ -25,12 +25,12 @@ public class VendorEventConsumers
         if (vendor != null)
         {
             vendor.Services.Add(new ServiceView
-            {
-                ServiceId = @event.ServiceId,
-                Name = @event.Name,
-                Description = @event.Description,
-                Price = @event.Price
-            });
+                                {
+                                    ServiceId   = @event.ServiceId,
+                                    Name        = @event.Name,
+                                    Description = @event.Description,
+                                    Price       = @event.Price
+                                });
             session.Store(vendor);
         }
     }
@@ -47,16 +47,13 @@ public class VendorEventConsumers
 
         if (isBlocked)
         {
-            if (!vendor.BlockedDates.Contains(@event.Date))
-            {
-                vendor.BlockedDates.Add(@event.Date);
-            }
+            if (!vendor.BlockedDates.Contains(@event.Date)) vendor.BlockedDates.Add(@event.Date);
         }
         else
         {
-             vendor.BlockedDates.Remove(@event.Date);
+            vendor.BlockedDates.Remove(@event.Date);
         }
-        
+
         session.Store(vendor);
     }
 }

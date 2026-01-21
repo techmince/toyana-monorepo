@@ -1,10 +1,10 @@
 using Marten;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Toyana.Contracts;
 using Toyana.Ordering.Features.Bookings;
 using Wolverine;
 using Wolverine.Http;
-using Toyana.Contracts;
 
 namespace Toyana.Admin.Features.Bookings;
 
@@ -22,9 +22,11 @@ public static class BookingsEndpoints
     [WolverinePost("/admin/bookings/{id}/reject")]
     [Authorize(Roles = "Admin")]
     [Tags("Admin")]
-    public static IResult RejectBooking(
-        Guid id, 
-        IMessageBus bus)
+    public static IResult RejectBooking
+    (
+        Guid id,
+        IMessageBus bus
+    )
     {
         return Results.BadRequest("Not fully implemented: Saga needs Admin bypass");
     }
@@ -32,10 +34,12 @@ public static class BookingsEndpoints
     [WolverinePost("/admin/bookings/{id}/price")]
     [Authorize(Roles = "Admin")]
     [Tags("Admin")]
-    public static async Task<IResult> AdjustPrice(
-        Guid id, 
-        [FromBody] decimal newAmount, 
-        IDocumentSession session)
+    public static async Task<IResult> AdjustPrice
+    (
+        Guid id,
+        [FromBody] decimal newAmount,
+        IDocumentSession session
+    )
     {
         // Append event to stream to adjust price
         session.Events.Append(id, new BookingPriceAdjusted(id, newAmount, "Admin Override", DateTime.UtcNow));
@@ -46,9 +50,11 @@ public static class BookingsEndpoints
     [WolverineGet("/admin/bookings/{id}/trace")]
     [Authorize(Roles = "Admin")]
     [Tags("Admin")]
-    public static async Task<IResult> TraceEvents(
-        Guid id, 
-        IQuerySession session)
+    public static async Task<IResult> TraceEvents
+    (
+        Guid id,
+        IQuerySession session
+    )
     {
         var events = await session.Events.FetchStreamAsync(id);
         return Results.Ok(events.Select(e => new { e.Id, Type = e.EventTypeName, e.Data, e.Timestamp }));
